@@ -7,7 +7,9 @@ to do list:
     tweak sampling rates, moving average rates
     add third moving average
     create bid-ask volume spread as another indicator
-
+    
+    tie the uart rx and tx together with wires and receive the data back
+    finish the uart tx code, loopback the data in the fpga back to python
 
 UART TIMING LOOPBACK TEST WITH FPGA
 bid and ask price: 0000.0000d -> 4 bytes 
@@ -30,8 +32,7 @@ total bytes per transaction: 19
 import serial
 import datetime
 
-
-ser = serial.Serial('COM3') #left usb port
+ser = serial.Serial('COM3', 115200, databits=8, parity='none',stopbits=1) #left usb port on laptop
 start = int(240)
 stop = int(15)
 addr = int(0)
