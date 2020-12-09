@@ -13,27 +13,34 @@ output reg [31:0] rx_sellvol;
 output reg rx_dv;
 
 input [7:0] tx_addr;
-input [31:0] tx_buyprice;
-input [31:0] tx_sellprice;
-input [31:0] tx_buyvol;
-input [31:0] tx_sellvol;
+input [7:0] tx_buysell;
+input [31:0] tx_timestamp;
 input tx_dv;
+output reg tx_busy;
 );
-
+//Least significant byte is sent out first
 /*
-byte structure: (START, ADDR, BUYPRICE MSB3, 2, 1, 0, SELLPRICE MSB3, 2, 1, 0, BUYVOL MSB3, 2, 1, 0
-                 ,SELLVOL MSB3, 2, 1, 0, STOP)
+byte structure ON RX: (START, ADDR, BUYPRICE LSB0, 1, 2, 3MSB, SELLPRICE LSB0, 1, 2, 3, BUYVOL LSB0, 1, 2, 3
+                 ,SELLVOL LSB0, 1, 2, 3, STOP)
 START = 8'b 11110000
-STOP = 8'd' 00001111
+STOP = 8'b' 00001111
 total bytes per transaction: 19
 */
 
-
+/*
+byte structure on TX: (START, ADDR, BUY/SELL, 4BYTE TIMESTAMP LSB0, 1, 2 ,3, STOP)
+BUY= 8'b11110000
+SELL=8'b00001111
+START = 8'b 10000000
+STOP = 8'b' 00000001
+assume that the buy/sell decision will be sent back to python before python increments to the next update
+this makes it so I do not need to send back the buy/sell price and volume 
+*/
 
 //RX State machine:  pull frame in from UART, pass to top module/mux
 wire uart_rx_dv;
 wire [7:0] uart_rx_data;
-reg [3:0] rx_state;
+reg [4:0] rx_state;
 reg [7:0] rx_start;
 reg [7:0] rx_addr;
 reg [31:0] rx_buyprice;
@@ -44,7 +51,7 @@ reg [7:0] rx_stop;
 
 always@(posedge clk)
 begin
-	case rx_state:
+	case (rx_state):
 	0:
 	begin
 	rx_dv <= 0;
@@ -76,7 +83,7 @@ begin
 	begin
 		if(uart_rx_dv) 
 			begin
-			rx_buyprice[31:24] <= uart_rx_data;
+			rx_buyprice[7:0] <= uart_rx_data;
 			rx_state <= 4;
 			end
 		else rx_state <=3;
@@ -85,7 +92,7 @@ begin
 		begin
 			if(uart_rx_dv)
 				begin
-				rx_buyprice[23:16] <= uart_rx_data;
+				rx_buyprice[15:8] <= uart_rx_data;
 				rx_state <= 5;
 				end
 			else rx_state <= 4;
@@ -94,7 +101,7 @@ begin
 		begin
 			if(uart_rx_dv)
 				begin
-				rx_buyprice[15:8] <= uart_rx_data;
+				rx_buyprice[24:16] <= uart_rx_data;
 				rx_state <= 6;
 				end
 			else rx_state <= 5;
@@ -103,7 +110,7 @@ begin
 		begin
 			if(uart_rx_dv)
 				begin
-				rx_buyprice[7:0] <= uart_rx_data;
+				rx_buyprice[31:25] <= uart_rx_data;
 				rx_state <= 7;
 				end
 			else rx_state <= 6;
@@ -112,7 +119,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_sellprice[31:25] <= uart_rx_data;
+				rx_sellprice[7:0] <= uart_rx_data;
 				rx_state <= 8;
 			end
 			else rx_state <= 7;
@@ -121,7 +128,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_sellprice[24:16] <= uart_rx_data;
+				rx_sellprice[15:8] <= uart_rx_data;
 				rx_state <= 9;
 			end
 			else rx_state <= 8;
@@ -130,7 +137,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_sellprice[15:8] <= uart_rx_data;
+				rx_sellprice[24:16] <= uart_rx_data;
 				rx_state <= 10;
 			end
 			else rx_state <= 9;
@@ -139,7 +146,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_sellprice[7:0] <= uart_rx_data;
+				rx_sellprice[31:25] <= uart_rx_data;
 				rx_state <= 11;
 			end
 			else rx_state <= 11;
@@ -148,7 +155,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_buyvol[31:24] <= uart_rx_data;
+				rx_buyvol[7:0] <= uart_rx_data;
 				rx_state <= 12;
 			end
 			else rx_state <= 11;
@@ -157,7 +164,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_buyvol[23:16] <= uart_rx_data;
+				rx_buyvol[15:8] <= uart_rx_data;
 				rx_state <=13;
 			end
 			else rx_state <= 12;
@@ -166,7 +173,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_buyvol[15:8] <= uart_rx_data;
+				rx_buyvol[24:16] <= uart_rx_data;
 				rx_state <= 14;
 			end
 			else rx_state <= 13;
@@ -175,7 +182,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_buyvol[7:0] <= uart_rx_data;
+				rx_buyvol[31:25] <= uart_rx_data;
 				rx_state <= 15;
 			end
 			else rx_state <= 14;
@@ -184,7 +191,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_sellvol[31:24] <= uart_rx_data;
+				rx_sellvol[7:0] <= uart_rx_data;
 				rx_state <= 16;
 			end
 			else rx_state <= 15;
@@ -193,7 +200,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_sellvol[23:16] <= uart_rx_data;
+				rx_sellvol[15:8] <= uart_rx_data;
 				rx_state <= 17;
 			end
 			else rx_state <= 16;
@@ -202,7 +209,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_sellvol[15:8] <= uart_rx_data;
+				rx_sellvol[24:16] <= uart_rx_data;
 				rx_state <= 18;
 			end
 			else rx_state <= 17;
@@ -211,7 +218,7 @@ begin
 		begin
 			if(uart_rx_dv)
 			begin
-				rx_sellvol[7:0] <= uart_rx_data;
+				rx_sellvol[31:25] <= uart_rx_data;
 				rx_state <= 19;
 			end
 			else rx_state <= 18;
@@ -253,7 +260,121 @@ end
 
 //TX state machine: pull frames in from MUX, ship to UART
 reg uart_tx_dv;
-reg //left off here
+reg [7:0] uart_tx_data;
+wire uart_tx_busy;
+wire uart_tx_done;
+reg [7:0] uart_tx_addr;
+reg [7:0] uart_tx_buysell;
+reg [31:0] uart_tx_timestamp;
+reg [5:0] tx_state;
+reg [7:0] uart_tx_start = 8'b10000000;
+reg [7:0] uart_tx_stop =  8'b00000001;
+
+always@(posedge clk)
+begin
+	case (tx_state)
+	0:
+	begin
+		if(tx_dv) //mux has data for me, reg it, set the tx_busy line high
+		begin
+		uart_tx_addr <= tx_addr;
+		uart_tx_buysell <= tx_buysell;
+		uart_tx_timestamp <= tx_timestamp;
+		tx_state <= 1;
+		tx_busy <= 1;
+		end
+		else tx_state <= 0;
+	end
+	1: //send the start byte
+	begin
+		if(!uart_tx_busy)
+		begin
+			uart_tx_data <= uart_tx_start;
+			uart_tx_dv <= 1;
+			tx_state <= 2;
+		end
+		else tx_state <= 1;
+	end
+	2: //send the addr
+	begin
+		uart_tx_dv <= 0;
+		if(!uart_tx_busy)
+		begin
+			uart_tx_data <= uart_tx_addr;
+			uart_tx_dv <= 1;
+			tx_state <= 3;
+		end
+		else tx_state <= 2;
+	end
+	3: //send the buysell signal
+	begin
+		uart_tx_dv <= 0;
+		if(!uart_tx_busy)
+		begin
+			uart_tx_data <= uart_tx_buysell;
+			uart_tx_dv <= 1;
+			tx_state <= 4;
+		end
+		else tx_state <= 3;
+	end
+	4://send the timestamp
+	begin
+		uart_tx_dv <= 0;
+		if(!uart_tx_busy)
+		begin
+			uart_tx_data <= uart_tx_timstamp[7:0];
+			uart_tx_dv <= 1;
+			tx_state <= 5;
+		end
+		else tx_state <= 4;
+	end
+	5:
+	begin
+		uart_tx_dv <= 0;
+		if(!uart_tx_busy)
+		begin
+			uart_tx_data <= uart_tx_timestamp[15:8];
+			uart_tx_dv <= 1;
+			tx_state <= 6;
+		end
+		else tx_state <= 5;
+	end
+	6:
+	begin
+		uart_tx_dv <= 0;
+		if(!uart_tx_busy)
+		begin
+			uart_tx_data <= uart_tx_timestamp[24:16];
+			uart_tx_dv <= 1;
+			tx_state <= 7;
+		end
+		else tx_state <= 6;
+	end
+	7:
+	begin
+		uart_tx_dv <= 0;
+		if(!uart_tx_busy)
+		begin
+			uart_tx_data <= uart_tx_timestamp[31:25];
+			uart_tx_dv <= 1;
+			tx_state <= 8;
+		end
+		else tx_state <= 7;
+	end
+	8: //send the stop byte, turn off tx_busy
+	begin
+		uart_tx_dv <= 0;
+		if(!uart_tx_busy)
+		begin
+			uart_tx_data <= uart_tx_stop;
+			uart_tx_dv <= 1;
+			tx_state <= 0
+			tx_busy <= 0;
+		end
+		else tx_state <= 8;
+	end
+	endcase
+end
 
 uart_rx urx0(
 .i_Clock (clk),

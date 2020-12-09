@@ -1,0 +1,7 @@
+module timestamp(
+
+
+);
+
+
+endmodule
