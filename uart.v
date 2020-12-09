@@ -275,6 +275,7 @@ begin
 	case (tx_state)
 	0:
 	begin
+	uart_tx_dv <= 0;
 		if(tx_dv) //mux has data for me, reg it, set the tx_busy line high
 		begin
 		uart_tx_addr <= tx_addr;
@@ -297,73 +298,84 @@ begin
 	end
 	2: //send the addr
 	begin
-		uart_tx_dv <= 0;
 		if(!uart_tx_busy)
 		begin
 			uart_tx_data <= uart_tx_addr;
 			uart_tx_dv <= 1;
 			tx_state <= 3;
 		end
-		else tx_state <= 2;
+		else begin
+		tx_state <= 2;
+		uart_tx_dv <= 0;
+		end
 	end
 	3: //send the buysell signal
 	begin
-		uart_tx_dv <= 0;
 		if(!uart_tx_busy)
 		begin
 			uart_tx_data <= uart_tx_buysell;
 			uart_tx_dv <= 1;
 			tx_state <= 4;
 		end
-		else tx_state <= 3;
+		else begin
+		tx_state <= 3;
+		uart_tx_dv <= 0;
+		end
 	end
 	4://send the timestamp
 	begin
-		uart_tx_dv <= 0;
 		if(!uart_tx_busy)
 		begin
 			uart_tx_data <= uart_tx_timstamp[7:0];
 			uart_tx_dv <= 1;
 			tx_state <= 5;
 		end
-		else tx_state <= 4;
+		else begin
+		tx_state <= 4;
+		uart_tx_dv <= 0;
+		end
 	end
 	5:
 	begin
-		uart_tx_dv <= 0;
 		if(!uart_tx_busy)
 		begin
 			uart_tx_data <= uart_tx_timestamp[15:8];
 			uart_tx_dv <= 1;
 			tx_state <= 6;
 		end
-		else tx_state <= 5;
+		else begin
+		tx_state <= 5;
+		uart_tx_dv <= 0;
+		end
 	end
 	6:
 	begin
-		uart_tx_dv <= 0;
 		if(!uart_tx_busy)
 		begin
 			uart_tx_data <= uart_tx_timestamp[24:16];
 			uart_tx_dv <= 1;
 			tx_state <= 7;
 		end
-		else tx_state <= 6;
+		else begin
+		tx_state <= 6;
+		uart_tx_dv <= 0;
+		end
 	end
 	7:
 	begin
-		uart_tx_dv <= 0;
 		if(!uart_tx_busy)
 		begin
 			uart_tx_data <= uart_tx_timestamp[31:25];
 			uart_tx_dv <= 1;
 			tx_state <= 8;
 		end
-		else tx_state <= 7;
+		else begin
+		tx_state <= 7;
+		uart_tx_dv <= 0;
+		end
 	end
 	8: //send the stop byte, turn off tx_busy
 	begin
-		uart_tx_dv <= 0;
 		if(!uart_tx_busy)
 		begin
 			uart_tx_data <= uart_tx_stop;
@@ -371,7 +383,10 @@ begin
 			tx_state <= 0
 			tx_busy <= 0;
 		end
-		else tx_state <= 8;
+		else begin
+		tx_state <= 8;
+		uart_tx_dv <= 0;
+		end
 	end
 	endcase
 end

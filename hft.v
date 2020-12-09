@@ -8,7 +8,6 @@ output tx
 
 reset_n = 1'b1;
 
-
 wire [7:0] addr;
 wire [31:0] rx_buyprice;
 wire [31:0] rx_sellprice;
@@ -29,6 +28,10 @@ wire [31:0] rx_buyvol0;
 wire [31:0] rx_sellvol0;
 wire rx_dv0;
 
+wire [7:0] tx_addr0; 
+wire [7:0] tx_buysell0;
+wire [31:0] tx_timestamp0;
+wire tx_dv0;
 
 //instantiate the UART modules
 uart uu0(
@@ -75,9 +78,20 @@ rx_mux rum0(
 
 //instantiate the TX addr mux
 tx_mux tux0(
+.clk (clk),
+.reset_n (reset_n),
+
+.tx_addr0 (tx_addr0); //from system0
+.tx_buysell0 (tx_buysell0);
+.tx_timestamp (tx_timestamp0);
+.tx_dv0 (tx_dv0);
 
 
-
+.tx_addr (tx_addr); //to uart
+.tx_buysell (tx_buysell);
+.tx_timestamp (tx_timestamp);
+.tx_dv (tx_dv);
+.tx_busy (tx_busy);
 	);
 
 //instantiate the system addr 0
@@ -93,11 +107,13 @@ system sys0(
 .rx_dv0 (rx_dv0);
 
 
-.tx_addr (tx_addr); //to tx_mux
-.tx_buysell (tx_buysell);
-.tx_timestamp (tx_timestamp);
-.tx_dv (tx_dv);
+.tx_addr0 (tx_addr0); //to tx_mux
+.tx_buysell0 (tx_buysell0);
+.tx_timestamp (tx_timestamp0);
+.tx_dv0 (tx_dv0);
 	);
+
+
 
 endmodule
 

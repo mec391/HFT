@@ -9,10 +9,10 @@ input [31:0] rx_buyvol0;
 input [31:0] rx_sellvol0;
 input rx_dv0;
 
-output reg [7:0] tx_addr;
-output reg [7:0] tx_buysell;
-output reg [31:0] tx_timestamp;
-output tx_dv;
+output reg [7:0] tx_addr0;
+output reg [7:0] tx_buysell0;
+output reg [31:0] tx_timestamp0;
+output tx_dv0;
 
 );
 
