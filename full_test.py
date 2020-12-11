@@ -47,7 +47,7 @@ input_buyvol = np.array(data['6'])
 
 ser = serial.Serial(port='COM3',baudrate=115200,timeout=(1)) #left usb port on laptop 
 
-
+#send the data to uart in real time
 def send_data(sp_in, bp_in, sv_in, bv_in):
     start = int(240)
     stop = int(15)
@@ -107,63 +107,103 @@ def send_data(sp_in, bp_in, sv_in, bv_in):
     ser.write(stop)
     
 
-#plt.style.use('ggplot')
-
-def live_plotter(x_vec,y1_data,line1,inputter,identifier='',pause_time=0.0000001):
+#plot the datas
+def live_plotter(x_vec,y1_data,xvec1,yvec1,xvec2,yvec2,line1,line2,line3,inputter,identifier='',pause_time=0.0000001):
     if line1==[]:
         # this is the call to matplotlib that allows dynamic plotting
         plt.ion()
         fig = plt.figure(figsize=(13,6))
         ax = fig.add_subplot(111)
         # create a variable for the line so we can later update it
-        if(inputter == 'avg price'):
-            line1, = ax.plot(x_vec,y1_data,'-o', color = 'blue')
-        elif(inputter == 'sell'):
-            line1, = ax.plot(x_vec[-1],y1_data[-1],marker='.',markersize=5, color = 'red')
-        elif(inputter == 'buy'):
-            line1, = ax.plot(x_vec[-1],y1_data[-1],marker='.',markersize=5, color = 'green')
+        line1, = ax.plot(x_vec,y1_data,'-.',alpha=0.8, color = 'blue')
+        line2, = ax.plot(xvec1,yvec1,'s',alpha = 0.8, color = 'green')
+        line3, = ax.plot(xvec2,yvec2,'s',alpha = 0.8, color = 'red')
         #update plot label/title
-        plt.ylabel('Y Label')
-        plt.title('Title: {}'.format(identifier))
+        plt.ylabel('Price')
+        plt.xlabel('time (s)')
+        plt.title('EUR-USD November 9-2020 Net Profit=%d Net Shares=%d' % (live_plotter.profit, live_plotter.shares))
         plt.show()
-    
     # after the figure, axis, and line are created, we only need to update the y-data
-    line1.set_ydata(y1_data)
-    line1.set_xdata(x_vec)
+    if(inputter == 'avg price'):
+        line1.set_ydata(y1_data)
+        line1.set_xdata(x_vec)
+    if(inputter == 'buy'):
+        plt.title('EUR-USD November 9-2020 Net Profit=%d Net Shares=%d' % (live_plotter.profit, live_plotter.shares))
+        line2.set_ydata(yvec1)
+        line2.set_xdata(xvec1)
+    if(inputter == 'sell'):
+        plt.title('EUR-USD November 9-2020 Net Profit=%d Net Shares=%d' % (live_plotter.profit, live_plotter.shares))
+        line3.set_ydata(yvec2)
+        line3.set_xdata(xvec2)
     # adjust limits if new data goes beyond bounds
     #if np.min(y1_data)<=line1.axes.get_ylim()[0] or np.max(y1_data)>=line1.axes.get_ylim()[1]:
-    plt.ylim([np.min(y1_data)-(.0001),np.max(y1_data)+(.0001)])
-        
-    if np.min(x_vec)<=line1.axes.get_xlim()[0] or np.max(x_vec)>=line1.axes.get_xlim()[1]:
-        plt.xlim([np.min(x_vec)-np.std(x_vec),np.max(x_vec)+np.std(x_vec)])    
+    if(inputter == 'avg price'):
+        plt.ylim([np.min(y1_data)-(.0001),np.max(y1_data)+(.0001)])    
+        if np.min(x_vec)<=line1.axes.get_xlim()[0] or np.max(x_vec)>=line1.axes.get_xlim()[1]:
+            plt.xlim([np.min(x_vec),np.max(x_vec)+np.std(x_vec)])    
     # this pauses the data so the figure/axis can catch up - the amount of pause can be altered above
     plt.pause(pause_time)
     # return line so we can update it again in the next iteration
-    return line1
+    return line1,line2,line3
 
 # MAIN FUNCTION ######################################
 init_time = time.perf_counter()
 init_avg_price = (input_sellprice[0] + input_buyprice[0])/2
 row_counter = 0
 line1 = []
-yvec = np.array([init_avg_price]*1000)
-xvec = np.array([0]*1000)
-net_shares = 0
-net_profit = 0
+line2 = []
+line3 = []
+yvec = np.array([init_avg_price]*700)
+xvec = np.array([0]*700)
+yvec1 = np.array([init_avg_price]*700)
+xvec1 = np.array([0]*700)
+yvec2 = np.array([init_avg_price]*700)
+xvec2 = np.array([0]*700)
+live_plotter.shares = 0.0000
+live_plotter.profit = 0.0000
+x=0
 while True:
     current_time = time.perf_counter() - init_time
-    if(current_time > ticker_time[row_counter]):
+    if(current_time > ticker_time[row_counter]): #time to send a message out
         send_data(input_sellprice[row_counter], input_buyprice[row_counter],
                   input_sellvol[row_counter], input_buyvol[row_counter])
         price_avgd = (input_sellprice[row_counter] + input_buyprice[row_counter])/2
         #updated plot price:
         yvec[-1] = price_avgd
         xvec[-1] = ticker_time[row_counter]
-        line1 = live_plotter(xvec, yvec, line1, 'avg price')
+        line1,line2,line3 = live_plotter(xvec, yvec,xvec1,yvec1,xvec2,yvec2, line1,line2,line3, 'avg price')
         yvec = np.append(yvec[1:],0.0)
         xvec = np.append(xvec[1:],0.0)
         row_counter = row_counter + 1
-    else:
+        
+        if(ser.in_waiting > 0): #msg was sent out and 100ms has passed, check for data
+            datas = [0]*19
+            numbytes = ser.in_waiting
+            #datas = struct.unpack('>19B', ser.read(19))
+            z = '>'; zz = 'B'
+            numbyte_string = z + str(numbytes) + zz
+            datas = struct.unpack(numbyte_string, ser.read(numbytes))
+            #plot the buy/sell
+            #buysell byte => 1 buy, 2 sell
+            x = x+1
+            if(datas[2] == 1 and x%2 == 0):
+                live_plotter.shares = live_plotter.shares + input_sellvol[row_counter-1]
+                live_plotter.profit = live_plotter.profit - input_sellvol[row_counter-1]*input_sellprice[row_counter-1]
+                yvec1[-1] = price_avgd
+                xvec1[-1] = ticker_time[row_counter-1]
+                line1,line2,line3 = live_plotter(xvec, yvec,xvec1,yvec1,xvec2,yvec2, line1,line2,line3, 'buy')
+                yvec1 = np.append(yvec1[1:],0.0)
+                xvec1 = np.append(xvec1[1:],0.0)
+            if(datas[3] == 2):
+                live_plotter.shares = live_plotter.shares - input_buyvol[row_counter-1]
+                live_plotter.profit = live_plotter.profit + input_buyvol[row_counter-1]*input_buyprice[row_counter-1]
+                yvec2[-1] = price_avgd
+                xvec2[-1] = ticker_time[row_counter-1]
+                line1,line2,line3 = live_plotter(xvec, yvec,xvec1,yvec1,xvec2,yvec2, line1,line2,line3, 'sell')
+                yvec2 = np.append(yvec2[1:],0.0)
+                xvec2 = np.append(xvec2[1:],0.0)
+        
+    else: #nothing to do, check for data again
         if(ser.in_waiting > 0):
             datas = [0]*19
             numbytes = ser.in_waiting
@@ -173,22 +213,23 @@ while True:
             datas = struct.unpack(numbyte_string, ser.read(numbytes))
             #plot the buy/sell
             #buysell byte => 1 buy, 2 sell
-            if(datas[3] == 1):
-                net_shares = net_shares + input_sellvol[row_counter-1]
-                net_profit = net_profit - input_sellvol[row_counter-1]*input_sellprice[row_counter-1]
-                yvec[-1] = price_avgd+1
-                xvec[-1] = ticker_time[row_counter-1]
-                line1 = live_plotter(xvec, yvec, line1, 'buy')
-                yvec = np.append(yvec[1:],0.0)
-                xvec = np.append(xvec[1:],0.0)
+            x = x+1
+            if(datas[2] == 1 and x%2 == 0):
+                live_plotter.shares = live_plotter.shares + input_sellvol[row_counter-1]
+                live_plotter.profit = live_plotter.profit - input_sellvol[row_counter-1]*input_sellprice[row_counter-1]
+                yvec1[-1] = price_avgd
+                xvec1[-1] = ticker_time[row_counter-1]
+                line1,line2,line3 = live_plotter(xvec, yvec,xvec1,yvec1,xvec2,yvec2, line1,line2,line3, 'buy')
+                yvec1 = np.append(yvec1[1:],0.0)
+                xvec1 = np.append(xvec1[1:],0.0)
             if(datas[3] == 2):
-                net_shares = net_shares - input_buyvol[row_counter-1]
-                net_profit = net_profit + input_buyvol[row_counter-1]*input_buyprice[row_counter-1]
-                yvec[-1] = price_avgd
-                xvec[-1] = ticker_time[row_counter-1]
-                line1 = live_plotter(xvec, yvec, line1, 'sell')
-                yvec = np.append(yvec[1:],0.0)
-                xvec = np.append(xvec[1:],0.0)
+                live_plotter.shares = live_plotter.shares - input_buyvol[row_counter-1]
+                live_plotter.profit = live_plotter.profit + input_buyvol[row_counter-1]*input_buyprice[row_counter-1]
+                yvec2[-1] = price_avgd
+                xvec2[-1] = ticker_time[row_counter-1]
+                line1,line2,line3 = live_plotter(xvec, yvec,xvec1,yvec1,xvec2,yvec2, line1,line2,line3, 'sell')
+                yvec2 = np.append(yvec2[1:],0.0)
+                xvec2 = np.append(xvec2[1:],0.0)
   
 ser.close()
 
