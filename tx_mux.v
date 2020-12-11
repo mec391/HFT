@@ -2,16 +2,16 @@ module tx_mux(
 input clk,
 input reset_n,
 
-input [7:0] tx_addr0;
-input [7:0] tx_buysell0;
-input [31:0] tx_timestamp0;
-input tx_dv0;
+input [7:0] tx_addr0,
+input [7:0] tx_buysell0,
+input [31:0] tx_timestamp0,
+input tx_dv0,
 
-output reg [7:0] tx_addr;
-output reg [7:0] tx_buysell;
-output reg [31:0] tx_timestamp;
-output reg tx_dv;
-input tx_busy;
+output reg [7:0] tx_addr,
+output reg [7:0] tx_buysell,
+output reg [31:0] tx_timestamp,
+output reg tx_dv,
+input tx_busy
 );
 
 //for now just run straight into uart

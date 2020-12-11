@@ -3,20 +3,20 @@ module uart(
 input clk,
 input reset_n,
 input rx,
-output tx
+output tx,
 
-output reg [7:0] addr;
-output reg [31:0] rx_buyprice;
-output reg [31:0] rx_sellprice;
-output reg [31:0] rx_buyvol;
-output reg [31:0] rx_sellvol;
-output reg rx_dv;
+output reg [7:0] addr,
+output reg [31:0] rx_buyprice,
+output reg [31:0] rx_sellprice,
+output reg [31:0] rx_buyvol,
+output reg [31:0] rx_sellvol,
+output reg rx_dv,
 
-input [7:0] tx_addr;
-input [7:0] tx_buysell;
-input [31:0] tx_timestamp;
-input tx_dv;
-output reg tx_busy;
+input [7:0] tx_addr,
+input [7:0] tx_buysell,
+input [31:0] tx_timestamp,
+input tx_dv,
+output reg tx_busy
 );
 //Least significant byte is sent out first
 /*

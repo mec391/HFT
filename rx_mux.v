@@ -1,20 +1,20 @@
 module rx_mux(
 input clk,
 input reset_n,
-input [7:0] addr;
-input [31:0] rx_buyprice;
-input [31:0] rx_sellprice;
-input [31:0] rx_buyvol;
-input [31:0] rx_sellvol;
-input rx_dv;
+input [7:0] addr,
+input [31:0] rx_buyprice,
+input [31:0] rx_sellprice,
+input [31:0] rx_buyvol,
+input [31:0] rx_sellvol,
+input rx_dv,
 
 //add more as new stocks are added
-output reg [7:0] addr0;
-output reg [31:0] rx_buyprice0;
-output reg [31:0] rx_sellprice0;
-output reg [31:0] rx_buyvol0;
-output reg [31:0] rx_sellvol0;
-output reg rx_dv0;
+output reg [7:0] addr0,
+output reg [31:0] rx_buyprice0,
+output reg [31:0] rx_sellprice0,
+output reg [31:0] rx_buyvol0,
+output reg [31:0] rx_sellvol0,
+output reg rx_dv0
 );
 
 always@(posedge clk)

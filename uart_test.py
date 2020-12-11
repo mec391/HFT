@@ -33,8 +33,19 @@ import serial
 import datetime
 import time
 import struct
+import matplotlib.pyplot as plt
+import numpy as np
+
+data = np.genfromtxt("C:/Users/mecap/Desktop/600/EURUSD_Nov9_2020.csv", delimiter=",", names=["0", "1","2","3","4","5","6","7", "8", "9", "10"])
+ticker_time = np.array(data['10'])
+avg_price = np.array(data['8'])
+
+init_time = time.perf_counter()
 
 
+    
+
+###########loopback test here vvv
 start = int(240)
 stop = int(15)
 addr = int(0)
@@ -92,10 +103,13 @@ ser.write(sellsize_left)
 ser.write(sellsize_right)
 ser.write(stop)
 
-
-#while True:
-#    if(ser.in_waiting)
-#        datas = struct.unpack('>19B', ser.read(19))
+datas = [0]*19
+while True:
+    if(ser.in_waiting > 0):
+        numbytes = ser.in_waiting
+        z = '>'; zz = 'B'
+        numbyte_string = z + str(numbytes) + zz
+        datas = struct.unpack(numbyte_string, ser.read(numbytes))
 
 datas = struct.unpack('>19B', ser.read(19))
   
@@ -109,8 +123,14 @@ ser.close()
 
 
 #LEFT OFF: 
-#quantize decimal base 16 for decimal values then multiply by 16 before sending
 #create loop to perform read
-#must change fpga code so it receives least signicant byte first 
-#
 
+
+##need to write timestamp in fpga
+#test the loopback with the fpga, figure out how to decode incoming serial
+#set up this code so that is reads stock data and sends it in real time, test
+#build the EMA modules in FPGA
+#figure out how to plot data in real time
+
+#for loopback testing, write if statements for sending data back
+#ie: if buyprice == 1234.1234 wahtever then send back a buy
