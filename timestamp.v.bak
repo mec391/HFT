@@ -4,7 +4,7 @@ input reset_n,
 input rx_dv,
 input tx_dv_in, //from algorithm
 output reg [31:0] tx_timestamp,
-output reg tx_dv_out //to tx_mux
+output tx_dv_out //to tx_mux
 );
 
 //when a dv comes into the system, start counter

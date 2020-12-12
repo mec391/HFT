@@ -51,7 +51,7 @@ reg [7:0] rx_stop;
 
 always@(posedge clk)
 begin
-	case (rx_state)
+	case (rx_state):
 	0:
 	begin
 	rx_dv <= 0;
@@ -68,7 +68,7 @@ begin
 			begin
 			rx_state <= 2;
 			end
-		else rx_state <= 0; //start delimiter is bad, start the scan over
+		else rx_state <= 0 //start delimiter is bad, start the scan over
 	end
 	2:
 	begin
@@ -326,7 +326,7 @@ begin
 	begin
 		if(!uart_tx_busy)
 		begin
-			uart_tx_data <= uart_tx_timestamp[7:0];
+			uart_tx_data <= uart_tx_timstamp[7:0];
 			uart_tx_dv <= 1;
 			tx_state <= 5;
 		end
@@ -380,7 +380,7 @@ begin
 		begin
 			uart_tx_data <= uart_tx_stop;
 			uart_tx_dv <= 1;
-			tx_state <= 0;
+			tx_state <= 0
 			tx_busy <= 0;
 		end
 		else begin
@@ -391,26 +391,16 @@ begin
 	endcase
 end
 
-wire half_clk;
-
-divide_by_2 dv2(
-.clk (clk),
-.reset_n (reset_n),
-.half_clk(half_clk)
-
-);
-
-
-UART_RX urx0(
-.i_Clock (half_clk),
+uart_rx urx0(
+.i_Clock (clk),
 .i_Rx_Serial (rx),
 .o_Rx_DV (uart_rx_dv),
 .o_Rx_Byte (uart_rx_data),
 .reset_n (reset_n)
   );
 
-UART_TX utx0(
-.i_Clock (half_clk),
+uart_tx utx0(
+.i_Clock (clk),
 .i_Tx_DV (uart_tx_dv),
 .i_Tx_Byte (uart_tx_data),
 .o_Tx_Active (uart_tx_busy),
@@ -420,27 +410,3 @@ UART_TX utx0(
   );
 
 endmodule
-
-
-
-module divide_by_2 
-(
-input clk,
-input reset_n,
-output reg half_clk
-
-  );
-
-
- always@(posedge clk)
-  begin
-      if(~reset_n)
-        begin
-          half_clk <= 0;
-        end
-      else begin
-        half_clk <= ~half_clk;
-      end
-  end
-
- endmodule

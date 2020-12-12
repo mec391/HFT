@@ -11,8 +11,8 @@ input rx_dv0,
 
 output reg [7:0] tx_addr0,
 output reg [7:0] tx_buysell0,
-output  [31:0] tx_timestamp0,
-output  tx_dv0
+output reg [31:0] tx_timestamp0,
+output reg tx_dv0
 
 );
 
@@ -31,13 +31,13 @@ tx_addr0 <= 0;
 		if(rx_dv0)
 		begin
 			counter <= 1;
-			if(rx_buyprice0 == 32'b00000100110100101000000000000000) tx_buysell0 <= 2;
+			if(rx_buyprice0 == 00000100 11010010 10000000 00000000) tx_buysell0 <= 2;
 			else tx_buysell0 <= 0;
 		end
 		else
 		begin
 			counter <= 0;
-			tx_buysell0 <= 0;
+			tx_buysell <= 0;
 		end
 	end
 	1:
