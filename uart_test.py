@@ -50,68 +50,112 @@ start = int(240)
 stop = int(15)
 addr = int(0)
 
-sample_buyprice = 1234.5 
+sample_buyprice = 4445.5 
 buyprice_left = int(sample_buyprice)
 buyprice_right= float(str(sample_buyprice-int(sample_buyprice))[1:])
 print(buyprice_right)
 ratio = (1/65536)
 buyprice_right = int((buyprice_right + ratio/2) // ratio * ratio * 65536)
 print(buyprice_right)
-sample_sellprice = 8765.4321
+sample_sellprice = 2225.4321
 sellprice_left = int(sample_sellprice)
 sellprice_right= float(str(sample_sellprice-int(sample_sellprice))[1:])
 sellprice_right = int((sellprice_right + ratio/2) // ratio * ratio * 65536)
 
-sample_buysize = 12.2100
+sample_buysize = 3212.2100
 buysize_left = int(sample_buysize)
 buysize_right= float(str(sample_buysize-int(sample_buysize))[1:])
 buysize_right = int((buysize_right + ratio/2) // ratio * ratio * 65536)
 
-sample_sellsize = 34.4298
+sample_sellsize = 4234.4298
 sellsize_left = int(sample_sellsize)
 sellsize_right= float(str(sample_sellsize-int(sample_sellsize))[1:])
 sellsize_right = int((sellsize_right + ratio/2) // ratio * ratio * 65535)
-
+print(sellsize_right)
 
 start = struct.pack('!B',start)
+print('start = ')
+print(start)
 addr = struct.pack('!B',addr)
+print('addr = ')
+print(addr)
 buyprice_left = struct.pack('H', buyprice_left)
+print('buyprice_left = ')
+print(buyprice_left)
 buyprice_right =  struct.pack('H', buyprice_right)
+print('buyprice_right = ')
+print(buyprice_right)
 sellprice_left =  struct.pack('H', sellprice_left)
+print('sellprice_left = ')
+print(sellprice_left)
 sellprice_right =  struct.pack('H', sellprice_right)
+print('sellprice_right = ')
+print(sellprice_right)
 buysize_left =  struct.pack('H', buysize_left)
+print('buysize_left =')
+print(buysize_left)
 buysize_right =  struct.pack('H', buysize_right)
+print('buysize_right = ')
+print(buysize_right)
 sellsize_left =  struct.pack('H', sellsize_left)
+print('sellsize_left = ')
+print(sellsize_left)
 sellsize_right =  struct.pack('H', sellsize_right)
+print('sellsize_right = ')
+print(sellsize_right)
 stop = struct.pack('!B',stop)
-
+print('stop =')
+print(stop)
 
 
 ser = serial.Serial(port='COM3',baudrate=115200,timeout=(1)) #left usb port on laptop    
 ser.flushInput()
 ser.flushOutput() 
     
+delayer = 10
 ser.write(start)
+print("start")
+time.sleep(delayer)
 ser.write(addr)
+print("addr")
+time.sleep(delayer)
 ser.write(buyprice_left)
+print("bpleft")
+time.sleep(delayer)
 ser.write(buyprice_right)
+print("bpright")
+time.sleep(delayer)
 ser.write(sellprice_left)
+print("spleft")
+time.sleep(delayer)
 ser.write(sellprice_right)
+print("spright")
+time.sleep(delayer)
 ser.write(buysize_left)
+print("bsleft")
+time.sleep(delayer)
 ser.write(buysize_right)
+print("bsright")
+time.sleep(delayer)
 ser.write(sellsize_left)
+print("ssleft")
+time.sleep(delayer)
 ser.write(sellsize_right)
+print("ssright")
+time.sleep(delayer)
 ser.write(stop)
 
 datas = [0]*19
-while True:
+regg = 0
+while regg < 1:
     if(ser.in_waiting > 0):
         numbytes = ser.in_waiting
         z = '>'; zz = 'B'
         numbyte_string = z + str(numbytes) + zz
         datas = struct.unpack(numbyte_string, ser.read(numbytes))
-
-datas = struct.unpack('>19B', ser.read(19))
+    if(datas[0] != 0):
+        regg = 1;
+#datas = struct.unpack('>19B', ser.read(19))
   
   
 ser.close()

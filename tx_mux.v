@@ -2,11 +2,13 @@ module tx_mux(
 input clk,
 input reset_n,
 
+//from system0:
 input [7:0] tx_addr0,
 input [7:0] tx_buysell0,
 input [31:0] tx_timestamp0,
 input tx_dv0,
 
+//to uart (tx):
 output reg [7:0] tx_addr,
 output reg [7:0] tx_buysell,
 output reg [31:0] tx_timestamp,
@@ -14,22 +16,42 @@ output reg tx_dv,
 input tx_busy
 );
 
-//for now just run straight into uart
+reg [3:0] sm;
+
+//for now just run straight into uart 
 always@(posedge clk)
 begin
-	if(tx_dv0)
+	case (sm)
+	0:
+	begin
+		if(tx_dv0)sm <= 1;
+		else sm <= 0; //add more if statements when adding more stocks
+	end
+	1:
+	begin
+	tx_addr <= tx_addr0; //crossing clock domains, hold for 2 clock cycles to make uart modules reg the data
+	tx_buysell <= tx_buysell0;
+	tx_timestamp <= tx_timestamp0;
+	tx_dv <= 1;
+	sm <= 2;
+	end
+	2:
 	begin
 	tx_addr <= tx_addr0;
 	tx_buysell <= tx_buysell0;
 	tx_timestamp <= tx_timestamp0;
 	tx_dv <= 1;
+	sm <= 2;	
 	end
-	else begin
+	3:
+	begin
 	tx_addr <= 0;
 	tx_buysell <= 0;
 	tx_timestamp <= 0;
-	tx_dv <= 0;
+	tx_dv <= 0;	
+	sm <= 0;
 	end
+	endcase
 end
 
 endmodule

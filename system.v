@@ -2,6 +2,7 @@ module system(
 input clk,
 input reset_n,
 
+//from rx_mux:
 input [7:0] addr0, 
 input [31:0] rx_buyprice0,
 input [31:0] rx_sellprice0,
@@ -9,6 +10,7 @@ input [31:0] rx_buyvol0,
 input [31:0] rx_sellvol0,
 input rx_dv0,
 
+//to tx_mux:
 output reg [7:0] tx_addr0,
 output reg [7:0] tx_buysell0,
 output  [31:0] tx_timestamp0,
@@ -47,6 +49,7 @@ tx_addr0 <= 0;
 	end
 	2:
 	begin
+	loopback_test <= 0;
 		if(tx_dv0)
 		begin
 			counter <= 0;

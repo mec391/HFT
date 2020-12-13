@@ -2,8 +2,8 @@ module hft(
 
 input clk,
 input rx,
-output tx
-
+output tx,
+output [9:0] debug
 	);
 
 
@@ -57,7 +57,9 @@ uart uu0(
 .tx_buysell (tx_buysell),
 .tx_timestamp (tx_timestamp),
 .tx_dv (tx_dv),
-.tx_busy (tx_busy)
+.tx_busy (tx_busy),
+
+.debug(debug)
 
 	);
 

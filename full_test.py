@@ -127,12 +127,11 @@ def live_plotter(x_vec,y1_data,xvec1,yvec1,xvec2,yvec2,line1,line2,line3,inputte
     if(inputter == 'avg price'):
         line1.set_ydata(y1_data)
         line1.set_xdata(x_vec)
-    if(inputter == 'buy'):
         plt.title('EUR-USD November 9-2020 Net Profit=%d Net Shares=%d' % (live_plotter.profit, live_plotter.shares))
+    if(inputter == 'buy'):
         line2.set_ydata(yvec1)
         line2.set_xdata(xvec1)
     if(inputter == 'sell'):
-        plt.title('EUR-USD November 9-2020 Net Profit=%d Net Shares=%d' % (live_plotter.profit, live_plotter.shares))
         line3.set_ydata(yvec2)
         line3.set_xdata(xvec2)
     # adjust limits if new data goes beyond bounds
@@ -234,12 +233,9 @@ while True:
 ser.close()
 
 #left off:
-    #plot wont change color when I get a buy/sell
-    #currently have price + 1 on buy to see difference
     #currently need to make datas[3] to datas[2] to trigger buy
     
 #LEFT OFF: 
-#create loop to perform read
 
 
 ##need to write timestamp in fpga
