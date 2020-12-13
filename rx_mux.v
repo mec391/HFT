@@ -42,7 +42,7 @@ begin
 		end
 		else
 		begin
-			sm <= 1; //crossing clock domains so add delay to prevent triggering dv twice
+			sm <= 0; //crossing clock domains so add delay to prevent triggering dv twice
 		end
 	end
 	1:

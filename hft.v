@@ -58,7 +58,6 @@ uart uu0(
 .tx_timestamp (tx_timestamp),
 .tx_dv (tx_dv),
 .tx_busy (tx_busy),
-
 .debug(debug)
 
 	);

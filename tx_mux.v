@@ -41,7 +41,7 @@ begin
 	tx_buysell <= tx_buysell0;
 	tx_timestamp <= tx_timestamp0;
 	tx_dv <= 1;
-	sm <= 2;	
+	sm <= 3;	
 	end
 	3:
 	begin

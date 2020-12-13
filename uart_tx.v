@@ -20,7 +20,8 @@ module UART_TX
    input [7:0] i_TX_Byte, 
    output reg  o_TX_Active,
    output reg  o_TX_Serial,
-   output reg  o_TX_Done
+   output reg  o_TX_Done,
+   output reg [9:0] debug
    );
  
   localparam IDLE         = 3'b000;
@@ -34,6 +35,10 @@ module UART_TX
   reg [2:0] r_Bit_Index;
   reg [7:0] r_TX_Data;
 
+always@(posedge i_Clock)
+begin
+  if(i_TX_DV) debug <= debug+1;
+end
 
   // Purpose: Control TX state machine
   always @(posedge i_Clock or negedge i_Rst_L)

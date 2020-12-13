@@ -14,13 +14,19 @@ input rx_dv0,
 output reg [7:0] tx_addr0,
 output reg [7:0] tx_buysell0,
 output  [31:0] tx_timestamp0,
-output  tx_dv0
+output  tx_dv0,
+
+output reg [9:0] debug
 
 );
 
 reg [31:0] regged_buyprice;
 reg [3:0] counter;
 reg loopback_test;
+
+
+
+
 ///for now just route input data directly to output mux for loopback testing -- the following is just for loopback testing
 always@(posedge clk)
 begin
@@ -33,8 +39,8 @@ tx_addr0 <= 0;
 		if(rx_dv0)
 		begin
 			counter <= 1;
-			if(rx_buyprice0 == 32'b00000100110100101000000000000000) tx_buysell0 <= 2;
-			else tx_buysell0 <= 0;
+			if(rx_buyprice0 == 32'b00010001010111011000000000000000) tx_buysell0 <= 2;
+			else tx_buysell0 <= 1;
 		end
 		else
 		begin

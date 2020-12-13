@@ -33,7 +33,12 @@ begin
 			tx_timestamp <= counter;
 			tx_dv_out <= 1;
 		end
-		else counter <= counter + 1;
+		else 
+		begin
+		counter <= counter + 1;
+		state <= 1;
+		tx_dv_out <= 0;
+		end
 	end
 	endcase
 end

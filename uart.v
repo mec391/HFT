@@ -19,8 +19,9 @@ input [7:0] tx_buysell,
 input [31:0] tx_timestamp,
 input tx_dv,
 output reg tx_busy,
+output  [9:0] debug
 
-output reg [9:0] debug
+
 );
 //Least significant byte is sent out first
 /*
@@ -52,42 +53,8 @@ reg [31:0] rx_sellvol;
 reg [7:0] rx_stop;
 
 wire half_clk;
-reg [5:0] ds;
-//debug state machine:
-always@(posedge half_clk)
-begin
-	debug[7:0] <= rx_buyprice[31:24];
-	/*case (ds)
-		0:
-	if(rx_buyprice != 0)begin
-		debug[7:0] <= rx_buyprice[31:24];
-		ds <= 1;
-	end
-	1:
-	begin
-	 if (rx_sellprice != 0) 
-	 	begin
-	 		debug[7:0] <= rx_sellprice[31:24];
-			ds <= 2;
-		end
-		end
-		2:
-		begin
-	if (rx_buyvol != 0) begin
-		debug[7:0] <= rx_buyvol[31:24];
-		ds <=3;
-	end
-	end
-	3:begin
-	if (rx_sellvol != 0) begin
-		debug[7:0] <= rx_buyvol[31:24];
-		ds <= 3;
-	end
-	end
-	//if (rx_state == 20) debug <= debug + 1;
-endcase
-*/
-end
+
+
 always@(posedge half_clk)
 begin
 	case (rx_state)
@@ -193,7 +160,7 @@ begin
 				rx_sellprice[15:8] <= uart_rx_data;
 				rx_state <= 11;
 			end
-			else rx_state <= 11;
+			else rx_state <= 10;
 		end
 	11: //begin the buyvol left receive
 		begin
@@ -315,6 +282,7 @@ reg [31:0] uart_tx_timestamp;
 reg [5:0] tx_state;
 reg [7:0] uart_tx_start = 8'b10000000;
 reg [7:0] uart_tx_stop =  8'b00000001;
+reg [6:0] cnt;
 
 always@(posedge half_clk)
 begin
@@ -338,17 +306,19 @@ begin
 		begin
 			uart_tx_data <= uart_tx_start;
 			uart_tx_dv <= 1;
-			tx_state <= 2;
+			cnt <= 2;
+			tx_state <= 9;
 		end
 		else tx_state <= 1;
 	end
 	2: //send the addr
 	begin
-		if(!uart_tx_busy)
+		if(uart_tx_done)
 		begin
 			uart_tx_data <= uart_tx_addr;
 			uart_tx_dv <= 1;
-			tx_state <= 3;
+			cnt <= 3;
+			tx_state <= 9;
 		end
 		else begin
 		tx_state <= 2;
@@ -357,11 +327,12 @@ begin
 	end
 	3: //send the buysell signal
 	begin
-		if(!uart_tx_busy)
+		if(uart_tx_done)
 		begin
 			uart_tx_data <= uart_tx_buysell;
 			uart_tx_dv <= 1;
-			tx_state <= 4;
+			cnt <= 4;
+			tx_state <= 9;
 		end
 		else begin
 		tx_state <= 3;
@@ -370,11 +341,12 @@ begin
 	end
 	4://send the timestamp
 	begin
-		if(!uart_tx_busy)
+		if(uart_tx_done)
 		begin
 			uart_tx_data <= uart_tx_timestamp[7:0];
 			uart_tx_dv <= 1;
-			tx_state <= 5;
+			cnt <= 5;
+			tx_state <= 9;
 		end
 		else begin
 		tx_state <= 4;
@@ -383,11 +355,12 @@ begin
 	end
 	5:
 	begin
-		if(!uart_tx_busy)
+		if(uart_tx_done)
 		begin
 			uart_tx_data <= uart_tx_timestamp[15:8];
 			uart_tx_dv <= 1;
-			tx_state <= 6;
+			cnt <= 6;
+			tx_state <= 9;
 		end
 		else begin
 		tx_state <= 5;
@@ -396,11 +369,12 @@ begin
 	end
 	6:
 	begin
-		if(!uart_tx_busy)
+		if(uart_tx_done)
 		begin
 			uart_tx_data <= uart_tx_timestamp[24:16];
 			uart_tx_dv <= 1;
-			tx_state <= 7;
+			cnt <= 7;
+			tx_state <= 9;
 		end
 		else begin
 		tx_state <= 6;
@@ -409,11 +383,12 @@ begin
 	end
 	7:
 	begin
-		if(!uart_tx_busy)
+		if(uart_tx_done)
 		begin
 			uart_tx_data <= uart_tx_timestamp[31:25];
 			uart_tx_dv <= 1;
-			tx_state <= 8;
+			cnt <= 8;
+			tx_state <= 9;
 		end
 		else begin
 		tx_state <= 7;
@@ -422,7 +397,7 @@ begin
 	end
 	8: //send the stop byte, turn off tx_busy
 	begin
-		if(!uart_tx_busy)
+		if(uart_tx_done)
 		begin
 			uart_tx_data <= uart_tx_stop;
 			uart_tx_dv <= 1;
@@ -433,6 +408,14 @@ begin
 		tx_state <= 8;
 		uart_tx_dv <= 0;
 		end
+	end
+	9: //delay state
+	begin
+		tx_state <= 10;
+	end
+	10:
+	begin
+		tx_state <= cnt;
 	end
 	endcase
 end
@@ -462,7 +445,8 @@ UART_TX utx0(
 .i_TX_Byte (uart_tx_data), 
 .o_TX_Active (uart_tx_busy),
 .o_TX_Serial (tx),
-.o_TX_Done (uart_tx_done)
+.o_TX_Done (uart_tx_done),
+.debug (debug)
   );
 
 endmodule

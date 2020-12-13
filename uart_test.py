@@ -112,7 +112,7 @@ ser = serial.Serial(port='COM3',baudrate=115200,timeout=(1)) #left usb port on l
 ser.flushInput()
 ser.flushOutput() 
     
-delayer = 10
+delayer = 0
 ser.write(start)
 print("start")
 time.sleep(delayer)
@@ -147,7 +147,7 @@ ser.write(stop)
 
 datas = [0]*19
 regg = 0
-while regg < 1:
+while True:
     if(ser.in_waiting > 0):
         numbytes = ser.in_waiting
         z = '>'; zz = 'B'
