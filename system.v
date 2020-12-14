@@ -39,8 +39,8 @@ tx_addr0 <= 0;
 		if(rx_dv0)
 		begin
 			counter <= 1;
-			if(rx_buyprice0 == 32'b00010001010111011000000000000000) tx_buysell0 <= 2;
-			else tx_buysell0 <= 1;
+			if(rx_buyvol0 > 32'b00000000000010100000000000000000) tx_buysell0 <= 2;
+			else if(rx_sellvol0 > 32'b00000000000010100000000000000000) tx_buysell0 <= 1;
 		end
 		else
 		begin
