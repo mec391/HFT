@@ -22,12 +22,15 @@ MA PARAMETERS:
     3 MIN: 45 POINTS - ALPHA = .4
     5 MIN: 75 POINTS - ALPHA = .2
     
+DECEMBER 14 2020: PARAMETERS TO CHANGE:
+    BUY/SELL AVERAGE - WEIGH BASED ON VOLUME
+    4 SEC AVERAGE - TRY .5, 1, 2, 3
+    1MIN/3MIN EMA - FIND THAT PAPER AND TRY DIFFERENT RATIOS
+    TRIPLE CROSSOVER OR USING THE ACTUAL SIGNAL VS THE EMAS
+    
 OUTPUT UPDATE/DECISION RATE:
     4 SECONDS
     
-SIMULATION RESULTS:
-    STARTING VALUES: 0 in capital, 0 shares
-    ENDING VALUES:
         
 @author: mecap
 """
@@ -39,7 +42,10 @@ import csv
 import time
 import matplotlib.pyplot as plt
 import numpy as np
-
+#3= sellprice
+#4= buyprice
+#5= sellvol
+#6= buyvol
 data = np.genfromtxt("C:/Users/mecap/Desktop/600/EURUSD_Nov9_2020.csv", delimiter=",", names=["0", "1","2","3","4","5","6","7", "8", "9", "10"])
 
 plot1 = plt.figure(1)
