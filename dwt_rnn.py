@@ -35,7 +35,8 @@ Total time per prediction  57.75 µs
 """
 
 #import serial
-import pywt
+import math
+#import pywt
 import csv
 import time
 import matplotlib.pyplot as plt
@@ -88,14 +89,14 @@ pseudo_returns = [0]*1440
 for x in range(1, 1440):
     pseudo_returns[x] = np.log(minavg[x] / minavg[x-1]) * 100
 
-plt.figure(2)
+plot2 = plt.figure(2)
 plt.plot(minplot, pseudo_returns)
-plt.show()
+plt.title("pesudo returns")
 
-#compute dwt -- download dwt package and make sure you get same answer given input
+#compute dwt -- 
 def haarFWT ( signal, level ):
 
-    s = .5;                  # scaling -- try 1 or ( .5 ** .5 )
+    s = .7071068;                  # scaling -- try 1 or ( .5 ** .5 )
 
     h = [ 1,  1 ];           # lowpass filter
     g = [ 1, -1 ];           # highpass filter        
@@ -122,19 +123,55 @@ def haarFWT ( signal, level ):
 
     return y
 
+cnt = 0
+mindwt = [0]*1000
+minn = 60
+output_indexer = 0
+dwt_output = np.zeros((1440,8))  #output depth --> 0-3: W3,2,2,2 ,,,4-7: V3,2,2,2
+for q in range(0, 196573):
+    if(time[q] < minn):
+        mindwt[cnt] =  price[q]
+        cnt = cnt + 1
+    elif (cnt > 3):
+        dwt_input = [0]*cnt
+        sizer = cnt
+        lengther = math.floor(math.log2(sizer))
+        rounder = (math.log2(sizer))
+#take size of input array, take log2
+#take that value and round down, use for input level of dwt
+#if log2 value is <.5 apply padding
+        dwt_input = mindwt[0:cnt]
+        haar_output2 = haarFWT(dwt_input, lengther-1)
+        haar_output3 = haarFWT(dwt_input, lengther)
+        if(int(rounder) + 1 - rounder > .5): #log2 is <.5, need to pad
+            dwt_output[output_indexer,0] =  haar_output3[1]
+            dwt_output[output_indexer,1:3] = haar_output2[2:4]
+            dwt_output[output_indexer,3] = 0
+            dwt_output[output_indexer,4] = haar_output3[0]
+            dwt_output[output_indexer,5:7] = haar_output2[0:2]
+            dwt_output[output_indexer,7] = 0
+        else: #log2 is <.5, no need to pad
+            dwt_output[output_indexer,0] = haar_output3[1]
+            dwt_output[output_indexer,1:4] = haar_output2[3:6]
+            dwt_output[output_indexer,4] = haar_output3[0]
+            dwt_output[output_indexer,5:8] = haar_output2[0:3]
+        cnt=0
+        minn = minn + 60
+        output_indexer = output_indexer + 1
+    else: #if no data or only 1-3 data value, carry value of prev minute
+        dwt_output[output_indexer][:] = dwt_output[output_indexer-1][:]
+        cnt=0
+        minn=minn + 60
+        output_indexer = output_indexer + 1
 
-s0 = [ 56, 40, 8, 24, 48, 48, 40, 16 ];
+dwt_output[1439,:] = dwt_output[1438,:]
 
-print( "level 0" );
-print( s0 );
 
-print( "level 1" );
-print( haarFWT (s0, 1 ) );
+combiner = np.zeros(1440)
+combiner = dwt_output[:,0] * dwt_output[:,4]
+plot3 = plt.figure(3)
+plt.plot(minplot, dwt_output[:,0],minplot, dwt_output[:,4], minplot, minavg, minplot, combiner)
+plt.title("top wavelet coef, top scale coef, 1 min avg")
+plt.show()
 
-print( "level 2" );
-print( haarFWT (s0, 2 ) );
 
-print( "level 3" );
-print( haarFWT (s0, 3 ) );
-
-#first 6 values of level 3 is what we want
