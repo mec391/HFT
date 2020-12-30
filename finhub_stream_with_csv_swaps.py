@@ -2,7 +2,7 @@
 """
 Created on Tue Dec 29 20:08:59 2020
 
-
+THIS ONE SWAPS OUT CSV FILES AT MIDNIGHT
 FINHUB WEBSOCKET STREAM, CAN BE USED FOR US STOCKS, FOREX, CRYPTO
 @author: mecap
 """
@@ -24,29 +24,34 @@ print("now =", now)
 # dd/mm/YY H:M:S
 dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
 print("date and time =", dt_string)	
+global data_file
 data_file = open("C:/Users/mecap/Desktop/600/bitcoin_data.csv", mode='w')
 data_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 data_writer.writerow(["c", "p", "s", "t", "v", dt_string])
+global old_day 
+old_day = now.strftime("%d")
 
 def on_message(ws, message):
-    #print(message)
-    #data_writer.writerow([message])
-    #print(" ")
+    global new_day
+    global old_day
+    global data_file
+
+ 
     xyz = str(message)
-    #print(type(xyz))
     data_object = json.loads(xyz)
-    #data_object = json.dumps(data_object, indent = 4)
-    #print(type(data_object))
-    #print(data_object)
-    #print(type(data_object))
-    #for data_object in data_object:
-    #   data_writer.writerow([data_object["c"], data_object["p"], data_object["s"],
-    #                          data_object["t"], data_object["v"]])
-    #po = pandas.read_json(data_object) 
-    #po.to_csv(data_file, sep=',')
     po = pd_json.json_normalize(data_object, record_path='data')
-    #print(po)
     po.to_csv(data_file, index=False, header=False, line_terminator='\n')
+
+        
+    now = datetime.now()
+    new_day = now.strftime("%d")
+    
+    if(new_day != old_day):
+        #swap out csv files
+        data_file.close()
+        data_file = open("C:/Users/mecap/Desktop/600/bitcoin_data"+new_day+".csv", mode='w')
+        old_day = new_day
+
     
 def on_error(ws, error):
     print(error)
@@ -60,7 +65,8 @@ def on_close(ws):
     print("date and time =", dt_string)
     data_writer.writerow(["c", "p", "s", "t", "v", dt_string])	
     data_file.close()
-    
+
+        
 def on_open(ws):
     ws.send('{"type":"subscribe","symbol":"TSLA"}')
     ws.send('{"type":"subscribe","symbol":"AMZN"}')
