@@ -2,6 +2,8 @@
 """
 Created on Tue Dec 29 20:08:59 2020
 
+
+FINHUB WEBSOCKET STREAM, CAN BE USED FOR US STOCKS, FOREX, CRYPTO
 @author: mecap
 """
 #USE THIS FOR CRYPTOS AND FOREX
@@ -12,10 +14,19 @@ import csv
 import json
 import pandas
 import pandas.io.json as pd_json
+from datetime import datetime
 
+# datetime object containing current date and time
+now = datetime.now()
+ 
+print("now =", now)
+
+# dd/mm/YY H:M:S
+dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+print("date and time =", dt_string)	
 data_file = open("C:/Users/mecap/Desktop/600/bitcoin_data.csv", mode='w')
 data_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-data_writer.writerow(["c", "p", "s", "t", "v"])
+data_writer.writerow(["c", "p", "s", "t", "v", dt_string])
    
 def on_message(ws, message):
     #print(message)
@@ -41,6 +52,12 @@ def on_error(ws, error):
 
 def on_close(ws):
     print("### closed ###")
+    
+    # dd/mm/YY H:M:S
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    print("date and time =", dt_string)
+    data_writer.writerow(["c", "p", "s", "t", "v", dt_string])	
     data_file.close()
     
 def on_open(ws):
