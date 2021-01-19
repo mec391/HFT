@@ -45,6 +45,8 @@ import numpy as np
 #4= buyprice
 #5= sellvol
 #6= buyvol
+
+"""
 data = np.genfromtxt("C:/Users/mecap/Desktop/600/EURUSD_Nov9_2020.csv", delimiter=",", names=["0", "1","2","3","4","5","6","7", "8", "9", "10"])
 plot1 = plt.figure(1)
 plt.plot(data['10'], data['8'], data['10'], data['3'], data['10'], data['4'])
@@ -53,14 +55,24 @@ plt.title("Top Bid, Top Ask, Avg")
 
 time = np.array(data['10'])
 price = np.array(data['8'])
+"""
+###tick data instead of LOB data inserted here:
+data = np.genfromtxt("C:/Users/mecap/Desktop/600/lobster_apple.csv", delimiter=",", names=["0", "1","2","3","4","5","6","7"])
+time = np.array(data['6'])
+price = np.array(data['7'])
+
+#need to go through and update parameters to make new data file
+
+plt.figure(1)
+plt.plot(time, price)
 
 minn = 60
 summs= 0
 cnt =0
-minavg = [0] * 1440 #this may need adjusted
+minavg = [0] * 390 #this may need adjusted
 minavgcnt = 0
 #take 1 min average
-for x in range(0, 196573):
+for x in range(0, 118497):
     if(time[x] < minn):
         summs = summs + price[x]
         cnt = cnt + 1
@@ -73,10 +85,10 @@ for x in range(0, 196573):
         cnt = 0
         minavgcnt = minavgcnt + 1
         minn = minn + 60
-minavg[1439] = minavg[1438]
-minplot = [0]*1440
+minavg[389] = minavg[388]
+minplot = [0]*390
 minplot[0] = 60
-for x in range(1, 1440):
+for x in range(1, 390):
     minplot[x] = minplot[x-1] + 60       
 
 #plot2 = plt.figure(2)
@@ -84,9 +96,9 @@ plt.plot(minplot, minavg)
 plt.title("1 minute average")
 
 
-pseudo_returns = [0]*1440
+pseudo_returns = [0]*390
 #take pseudolog returns
-for x in range(1, 1440):
+for x in range(1, 390):
     pseudo_returns[x] = np.log(minavg[x] / minavg[x-1]) * 100
 
 plot2 = plt.figure(2)
@@ -124,11 +136,11 @@ def haarFWT ( signal, level ):
     return y
 
 cnt = 0
-mindwt = [0]*1000
+mindwt = [0]*2000
 minn = 60
 output_indexer = 0
-dwt_output = np.zeros((1440,8))  #output depth --> 0-3: W3,2,2,2 ,,,4-7: V3,2,2,2
-for q in range(0, 196573):
+dwt_output = np.zeros((390,8))  #output depth --> 0-3: W3,2,2,2 ,,,4-7: V3,2,2,2
+for q in range(0, 118496):
     if(time[q] < minn):
         mindwt[cnt] =  price[q]
         cnt = cnt + 1
@@ -164,13 +176,14 @@ for q in range(0, 196573):
         minn=minn + 60
         output_indexer = output_indexer + 1
 
-dwt_output[1439,:] = dwt_output[1438,:]
+dwt_output[389,:] = dwt_output[388,:]
 
 
-combiner = np.zeros(1440)
+combiner = np.zeros(390)
 combiner = dwt_output[:,0] * dwt_output[:,4]
 plot3 = plt.figure(3)
-plt.plot(minplot, dwt_output[:,0],minplot, dwt_output[:,4], minplot, minavg, minplot, combiner)
+#plt.plot(minplot, dwt_output[:,0], 'red',minplot, dwt_output[:,4],'blue', minplot, minavg,'green', minplot, combiner, 'orange')
+plt.plot(minplot, dwt_output[:,0], 'red',minplot, dwt_output[:,4],'blue', minplot, minavg,'green')#, minplot, combiner, 'orange')
 plt.title("top wavelet coef, top scale coef, 1 min avg")
 plt.show()
 
